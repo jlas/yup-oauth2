@@ -1,5 +1,6 @@
 use crate::error::Error;
 use crate::types::TokenInfo;
+use hyper::{Body, Request};
 
 /// foo
 pub struct MetadataServerFlow;
@@ -20,23 +21,20 @@ impl MetadataServerFlow {
         C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
         I: IntoIterator<Item = &'b T>,
     {
-        //        if !self.token.access_token.is_empty() && !self.token.expired() {
-        //            return Ok(self.token.clone());
-        //        }
-
         log::debug!("DefaultApplicationCredentials: checking metadata server...");
         let error;
-        let uri = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token".parse().unwrap();
-        let response = hyper_client.get(uri).await;
-        //                .header(MetadataFlavor("Google".to_owned()))
-        //                .send();
+        let uri = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token";
+        let req = Request::builder()
+            .uri(uri)
+            .header("Metadata-Flavor", "Google")
+            .body(Body::empty())
+            .unwrap();
+        let response = hyper_client.request(req).await;
         match response {
             Ok(response) => {
                 let (head, body) = response.into_parts();
                 let body = hyper::body::to_bytes(body).await?;
                 log::debug!("Received response; head: {:?} body: {:?}", head, body);
-                //self.token = TokenInfo::from_json(response)?;
-                //return Ok(self.token.clone());
                 return Ok(TokenInfo::from_json(&body)?);
             }
             Err(new_error) => error = new_error,

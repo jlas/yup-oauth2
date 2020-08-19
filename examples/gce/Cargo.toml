@@ -1,0 +1,12 @@
+[package]
+name = "gce"
+version = "0.0.1"
+edition = "2018"
+
+[dependencies]
+yup-oauth2 = { path = "../../" }
+tokio = { version = "0.2", features = ["macros"] }
+log = "0.4"
+hyper = "0.13.5"
+hyper-rustls = "0.20"
+bytes = "0.5.6"

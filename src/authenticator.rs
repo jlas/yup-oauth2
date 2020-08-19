@@ -3,6 +3,7 @@ use crate::authenticator_delegate::{DeviceFlowDelegate, InstalledFlowDelegate};
 use crate::device::DeviceFlow;
 use crate::error::Error;
 use crate::installed::{InstalledFlow, InstalledFlowReturnMethod};
+use crate::metadata_server::MetadataServerFlow;
 use crate::refresh::RefreshFlow;
 use crate::service_account::{ServiceAccountFlow, ServiceAccountFlowOpts, ServiceAccountKey};
 use crate::storage::{self, Storage};
@@ -405,6 +406,7 @@ mod private {
     use crate::device::DeviceFlow;
     use crate::error::Error;
     use crate::installed::InstalledFlow;
+    use crate::metadata_server::MetadataServerFlow;
     use crate::service_account::ServiceAccountFlow;
     use crate::types::{ApplicationSecret, TokenInfo};
 
@@ -412,6 +414,7 @@ mod private {
         DeviceFlow(DeviceFlow),
         InstalledFlow(InstalledFlow),
         ServiceAccountFlow(ServiceAccountFlow),
+        MetadataServerFlow(MetadataServerFlow),
     }
 
     impl AuthFlow {
@@ -420,6 +423,7 @@ mod private {
                 AuthFlow::DeviceFlow(device_flow) => Some(&device_flow.app_secret),
                 AuthFlow::InstalledFlow(installed_flow) => Some(&installed_flow.app_secret),
                 AuthFlow::ServiceAccountFlow(_) => None,
+                AuthFlow::MetadataServerFlow(_) => None,
             }
         }
 
@@ -440,8 +444,38 @@ mod private {
                 AuthFlow::ServiceAccountFlow(service_account_flow) => {
                     service_account_flow.token(hyper_client, scopes).await
                 }
+                AuthFlow::MetadataServerFlow(metadata_server_flow) => {
+                    metadata_server_flow.token(hyper_client, scopes).await
+                }
             }
         }
+    }
+}
+
+/// asdf
+pub struct MetadataServerAuthenticator;
+
+/// asdf
+impl MetadataServerAuthenticator {
+    /// asdf
+    pub fn builder() -> AuthenticatorBuilder<DefaultHyperClient, MetadataServerFlow> {
+        AuthenticatorBuilder::<DefaultHyperClient, _>::with_auth_flow(MetadataServerFlow::new())
+    }
+}
+
+/// foo
+impl<C> AuthenticatorBuilder<C, MetadataServerFlow> {
+    /// Create the authenticator.
+    pub async fn build(self) -> io::Result<Authenticator<C::Connector>>
+    where
+        C: HyperClientBuilder,
+    {
+        Self::common_build(
+            self.hyper_client_builder,
+            self.storage_type,
+            AuthFlow::MetadataServerFlow(self.auth_flow),
+        )
+        .await
     }
 }
 
